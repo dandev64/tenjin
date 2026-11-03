@@ -1,5 +1,5 @@
 import { MangaDexSource } from './mangadex.js';
-import { ComickSource } from './comick.js';
+import { MangaFireSource } from './mangafire.js';
 
 const sources = new Map();
 
@@ -8,7 +8,7 @@ function register(source) {
 }
 
 register(new MangaDexSource());
-register(new ComickSource());
+register(new MangaFireSource());
 
 export function getSource(id) {
   return sources.get(id);

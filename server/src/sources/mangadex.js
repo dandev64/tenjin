@@ -108,22 +108,27 @@ export class MangaDexSource {
     const data = await fetchJSON(
       `${API}/manga/${mangaId}/feed?limit=${limit}&offset=${offset}&translatedLanguage[]=en&order[chapter]=asc&includes[]=scanlation_group`
     );
+    const allChapters = data.data.map(ch => {
+      const group = extractRelationship(ch.relationships, 'scanlation_group');
+      return {
+        id: ch.id,
+        chapter: ch.attributes.chapter,
+        title: ch.attributes.title || '',
+        volume: ch.attributes.volume,
+        language: ch.attributes.translatedLanguage,
+        scanlator: group?.attributes?.name || 'Unknown',
+        pages: ch.attributes.pages,
+        externalUrl: ch.attributes.externalUrl || null,
+        publishedAt: ch.attributes.publishAt,
+      };
+    });
+
+    const readable = allChapters.filter(ch => ch.pages > 0);
+    const externalCount = allChapters.filter(ch => ch.externalUrl).length;
+
     return {
-      chapters: data.data
-        .filter(ch => ch.attributes.pages > 0)
-        .map(ch => {
-          const group = extractRelationship(ch.relationships, 'scanlation_group');
-          return {
-            id: ch.id,
-            chapter: ch.attributes.chapter,
-            title: ch.attributes.title || '',
-            volume: ch.attributes.volume,
-            language: ch.attributes.translatedLanguage,
-            scanlator: group?.attributes?.name || 'Unknown',
-            pages: ch.attributes.pages,
-            publishedAt: ch.attributes.publishAt,
-          };
-        }),
+      chapters: readable,
+      externalCount,
       hasMore: offset + limit < data.total,
       total: data.total,
     };

@@ -8,6 +8,7 @@ import db from '../db.js';
 export default function MangaPage({ source, mangaId, navigate }) {
   const [manga, setManga] = useState(null);
   const [chapters, setChapters] = useState([]);
+  const [externalCount, setExternalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [chaptersLoading, setChaptersLoading] = useState(true);
   const [progress, setProgress] = useState(null);
@@ -29,6 +30,7 @@ export default function MangaPage({ source, mangaId, navigate }) {
     ]).then(([m, ch, prog, lib]) => {
       setManga(m);
       setChapters(ch.chapters);
+      setExternalCount(ch.externalCount || 0);
       setHasMore(ch.hasMore);
       setProgress(prog);
       setInLibrary(!!lib);
@@ -157,7 +159,7 @@ export default function MangaPage({ source, mangaId, navigate }) {
 
       <div>
         <h2 className="text-lg font-semibold mb-3">{chapters.length} Chapters</h2>
-        <ChapterList chapters={chapters} onSelect={openChapter} currentChapterId={progress?.chapterId} />
+        <ChapterList chapters={chapters} externalCount={externalCount} onSelect={openChapter} currentChapterId={progress?.chapterId} />
         {hasMore && (
           <button
             onClick={loadMoreChapters}

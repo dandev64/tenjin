@@ -3,7 +3,7 @@ import { fetchStream } from '../lib/http.js';
 
 const SOURCE_HEADERS = {
   mangadex: { Referer: 'https://mangadex.org/' },
-  comick: { Referer: 'https://comick.fun/' },
+  mangafire: { Referer: 'https://mangapill.com/' },
 };
 
 export async function proxyImage(req, res) {

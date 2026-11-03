@@ -1,6 +1,16 @@
-export default function ChapterList({ chapters, onSelect, currentChapterId }) {
+export default function ChapterList({ chapters, externalCount, onSelect, currentChapterId }) {
   if (!chapters?.length) {
-    return <p className="text-zinc-500 text-sm py-4">No chapters available.</p>;
+    return (
+      <div className="py-6 text-center">
+        <p className="text-zinc-400">No readable chapters on this source.</p>
+        {externalCount > 0 && (
+          <p className="text-zinc-500 text-sm mt-2">
+            {externalCount} chapter{externalCount !== 1 ? 's' : ''} available on external sites only (licensed content).
+            Try searching on a different source.
+          </p>
+        )}
+      </div>
+    );
   }
 
   return (
