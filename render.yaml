@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: tenjin
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: cd client && npm install && npm run build && cd ../server && npm install
+    startCommand: cd server && node src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGINS
+        value: ""
