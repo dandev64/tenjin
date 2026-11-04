@@ -25,6 +25,10 @@ export function searchManga(source, query, page = 1) {
   return request(`/api/${source}/search?q=${encodeURIComponent(query)}&page=${page}`);
 }
 
+export function searchAllSources(query) {
+  return request(`/api/search/all?q=${encodeURIComponent(query)}`);
+}
+
 export function getMangaDetails(source, id) {
   return request(`/api/${source}/manga?id=${encodeURIComponent(id)}`);
 }

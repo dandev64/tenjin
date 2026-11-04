@@ -46,6 +46,32 @@ router.get('/:source/latest', withSource(async (req, res) => {
   res.json(result);
 }));
 
+router.get('/search/all', async (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.status(400).json({ error: 'Missing query parameter q' });
+
+  const sources = getAllSources();
+  const results = await Promise.allSettled(
+    sources.map(async (s) => {
+      const source = getSource(s.id);
+      const result = await source.search(q, 1);
+      return {
+        sourceId: s.id,
+        sourceName: s.name,
+        nsfw: s.nsfw || false,
+        manga: result.manga.map(m => ({ ...m, source: s.id, sourceName: s.name })),
+      };
+    }),
+  );
+
+  const grouped = [];
+  for (const r of results) {
+    if (r.status === 'fulfilled') grouped.push(r.value);
+  }
+
+  res.json({ sources: grouped });
+});
+
 router.get('/:source/search', withSource(async (req, res) => {
   const { q, page } = req.query;
   if (!q) return res.status(400).json({ error: 'Missing query parameter q' });
