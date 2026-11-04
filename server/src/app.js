@@ -16,12 +16,22 @@ export function createApp() {
       : true,
   }));
 
+  app.use((req, res, next) => {
+    const url = new URL(req.url, 'http://localhost');
+    const apiPath = url.searchParams.get('__path');
+    if (apiPath) {
+      url.searchParams.delete('__path');
+      req.url = `/api${apiPath}${url.search}`;
+    }
+    next();
+  });
+
   app.use('/api', apiRouter);
 
   if (process.env.NODE_ENV === 'production') {
     const clientDist = path.join(__dirname, '../../client/dist');
     app.use(express.static(clientDist));
-    app.get('*', (req, res) => {
+    app.get('/{*path}', (req, res) => {
       res.sendFile(path.join(clientDist, 'index.html'));
     });
   }

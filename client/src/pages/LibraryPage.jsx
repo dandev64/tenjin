@@ -1,23 +1,117 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import db from '../db.js';
 import LibraryGrid from '../components/LibraryGrid.jsx';
+import { getBookmarks, getDownloadedChapters, removeDownloadedChapter } from '../lib/chapterLibrary.js';
+
+function groupByManga(chapters) {
+  const map = new Map();
+  for (const ch of chapters) {
+    if (!map.has(ch.mangaId)) {
+      map.set(ch.mangaId, { mangaId: ch.mangaId, mangaTitle: ch.mangaTitle, chapters: [] });
+    }
+    map.get(ch.mangaId).chapters.push(ch);
+  }
+  const groups = Array.from(map.values());
+  for (const g of groups) {
+    g.chapters.sort((a, b) => (parseFloat(a.chapterNum) || 0) - (parseFloat(b.chapterNum) || 0));
+  }
+  return groups;
+}
+
+function MangaGroup({ group, open, onToggle, onChapterClick, renderActions }) {
+  return (
+    <div className="rounded-lg bg-zinc-900 overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-zinc-800/60 transition-colors"
+      >
+        <div className="min-w-0 flex-1">
+          <span className="block truncate font-medium">{group.mangaTitle}</span>
+          <span className="text-xs text-zinc-500">
+            {group.chapters.length} chapter{group.chapters.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <span className={`text-zinc-500 text-sm ml-3 transition-transform ${open ? 'rotate-90' : ''}`}>
+          ▸
+        </span>
+      </button>
+      {open && (
+        <div className="border-t border-zinc-800 flex flex-col">
+          {group.chapters.map(ch => (
+            <div
+              key={ch.chapterId}
+              className="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-800/40 transition-colors"
+            >
+              <button
+                onClick={() => onChapterClick(ch)}
+                className="min-w-0 flex-1 text-left text-sm hover:text-indigo-300 transition-colors"
+              >
+                <span className="font-medium">Ch. {ch.chapterNum || '?'}</span>
+                {ch.chapterTitle && !ch.chapterTitle.startsWith('Chapter') && (
+                  <span className="text-zinc-500 ml-2">{ch.chapterTitle}</span>
+                )}
+              </button>
+              {renderActions?.(ch)}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function LibraryPage({ source, navigate }) {
   const [manga, setManga] = useState([]);
+  const [bookmarks, setBookmarks] = useState([]);
+  const [downloads, setDownloads] = useState([]);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [expandedBookmarks, setExpandedBookmarks] = useState(new Set());
+  const [expandedDownloads, setExpandedDownloads] = useState(new Set());
 
   useEffect(() => {
-    db.library
-      .where('source').equals(source)
-      .reverse()
-      .sortBy('updatedAt')
-      .then(setManga)
+    Promise.all([
+      db.library.where('source').equals(source).reverse().sortBy('updatedAt'),
+      getBookmarks(source),
+      getDownloadedChapters(source),
+    ])
+      .then(([savedManga, savedBookmarks, savedDownloads]) => {
+        setManga(savedManga);
+        setBookmarks(savedBookmarks);
+        setDownloads(savedDownloads);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [source]);
 
+  const bookmarkGroups = useMemo(() => groupByManga(bookmarks), [bookmarks]);
+  const downloadGroups = useMemo(() => groupByManga(downloads), [downloads]);
+
   function handleMangaClick(m) {
     navigate(`#/manga/${source}/${encodeURIComponent(m.id)}`);
+  }
+
+  function openChapter(chapter) {
+    navigate(`#/read/${source}/${encodeURIComponent(chapter.mangaId)}/${encodeURIComponent(chapter.chapterId)}`);
+  }
+
+  function toggleExpanded(set, setter, mangaId) {
+    setter(prev => {
+      const next = new Set(prev);
+      if (next.has(mangaId)) next.delete(mangaId);
+      else next.add(mangaId);
+      return next;
+    });
+  }
+
+  async function handleRemoveDownload(chapter) {
+    try {
+      await removeDownloadedChapter(source, chapter.mangaId, chapter.chapterId);
+      setDownloads(current => current.filter(item => item.chapterId !== chapter.chapterId || item.mangaId !== chapter.mangaId));
+    } catch (err) {
+      console.error(err);
+      setError(`Could not remove offline chapter: ${err.message}`);
+    }
   }
 
   if (loading) {
@@ -25,9 +119,60 @@ export default function LibraryPage({ source, navigate }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <h2 className="text-xl font-bold">Library</h2>
-      <LibraryGrid manga={manga} source={source} onMangaClick={handleMangaClick} />
+      {manga.length > 0 && <LibraryGrid manga={manga} source={source} onMangaClick={handleMangaClick} />}
+      {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
+
+      <section>
+        <h3 className="mb-3 text-lg font-semibold">Bookmarked</h3>
+        {bookmarkGroups.length ? (
+          <div className="flex flex-col gap-2">
+            {bookmarkGroups.map(group => (
+              <MangaGroup
+                key={group.mangaId}
+                group={group}
+                open={expandedBookmarks.has(group.mangaId)}
+                onToggle={() => toggleExpanded(expandedBookmarks, setExpandedBookmarks, group.mangaId)}
+                onChapterClick={openChapter}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-zinc-500">Bookmarked chapters will appear here.</p>
+        )}
+      </section>
+
+      <section>
+        <h3 className="mb-3 text-lg font-semibold">Downloaded</h3>
+        {downloadGroups.length ? (
+          <div className="flex flex-col gap-2">
+            {downloadGroups.map(group => (
+              <MangaGroup
+                key={group.mangaId}
+                group={group}
+                open={expandedDownloads.has(group.mangaId)}
+                onToggle={() => toggleExpanded(expandedDownloads, setExpandedDownloads, group.mangaId)}
+                onChapterClick={openChapter}
+                renderActions={(ch) => (
+                  <>
+                    <span className="text-xs text-zinc-600">{ch.pageCount}p</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleRemoveDownload(ch); }}
+                      className="shrink-0 rounded px-2 py-1 text-xs text-zinc-500 hover:text-red-300 transition-colors"
+                      aria-label={`Remove chapter ${ch.chapterNum} download`}
+                    >
+                      ✕
+                    </button>
+                  </>
+                )}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-zinc-500">Downloaded chapters will appear here for offline reading.</p>
+        )}
+      </section>
     </div>
   );
 }

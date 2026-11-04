@@ -53,6 +53,21 @@ router.get('/:source/search', withSource(async (req, res) => {
   res.json(result);
 }));
 
+router.get('/:source/manga/chapters', withSource(async (req, res) => {
+  const mangaId = req.query.id;
+  if (!mangaId) return res.status(400).json({ error: 'Missing query parameter id' });
+  const page = parseInt(req.query.page) || 1;
+  const result = await req.source.getChapterList(mangaId, page);
+  res.json(result);
+}));
+
+router.get('/:source/manga', withSource(async (req, res) => {
+  const mangaId = req.query.id;
+  if (!mangaId) return res.status(400).json({ error: 'Missing query parameter id' });
+  const result = await req.source.getMangaDetails(mangaId);
+  res.json(result);
+}));
+
 router.get('/:source/manga/:id', withSource(async (req, res) => {
   const result = await req.source.getMangaDetails(req.params.id);
   res.json(result);
@@ -61,6 +76,13 @@ router.get('/:source/manga/:id', withSource(async (req, res) => {
 router.get('/:source/manga/:id/chapters', withSource(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const result = await req.source.getChapterList(req.params.id, page);
+  res.json(result);
+}));
+
+router.get('/:source/chapter/pages', withSource(async (req, res) => {
+  const chapterId = req.query.id;
+  if (!chapterId) return res.status(400).json({ error: 'Missing query parameter id' });
+  const result = await req.source.getPageUrls(chapterId);
   res.json(result);
 }));
 

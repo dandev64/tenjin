@@ -1,5 +1,6 @@
+import { MangaPillSource } from './mangapill.js';
 import { MangaDexSource } from './mangadex.js';
-import { MangaFireSource } from './mangafire.js';
+import { AsuraScansSource } from './asurascans.js';
 
 const sources = new Map();
 
@@ -7,8 +8,9 @@ function register(source) {
   sources.set(source.id, source);
 }
 
+register(new MangaPillSource());
 register(new MangaDexSource());
-register(new MangaFireSource());
+register(new AsuraScansSource());
 
 export function getSource(id) {
   return sources.get(id);

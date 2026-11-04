@@ -47,8 +47,8 @@ function parseSearchResults(html) {
   return manga;
 }
 
-export class MangaFireSource {
-  id = 'mangafire';
+export class MangaPillSource {
+  id = 'mangapill';
   name = 'MangaPill';
   icon = '💊';
 
@@ -70,7 +70,6 @@ export class MangaFireSource {
   }
 
   async getLatest(page = 1) {
-    // MangaPill homepage serves as both popular and latest
     return this.getPopular(page);
   }
 

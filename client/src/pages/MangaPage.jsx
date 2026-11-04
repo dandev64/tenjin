@@ -3,6 +3,12 @@ import { getMangaDetails, getChapterList, proxyImageUrl } from '../api.js';
 import ChapterList from '../components/ChapterList.jsx';
 import { DetailSkeleton } from '../components/Skeletons.jsx';
 import { getProgress, addToHistory } from '../lib/readingProgress.js';
+import {
+  downloadChapter as saveChapterOffline,
+  getDownloadedChapters,
+  getMangaBookmarks,
+  toggleChapterBookmark,
+} from '../lib/chapterLibrary.js';
 import db from '../db.js';
 
 export default function MangaPage({ source, mangaId, navigate }) {
@@ -15,6 +21,10 @@ export default function MangaPage({ source, mangaId, navigate }) {
   const [inLibrary, setInLibrary] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [sortNewestFirst, setSortNewestFirst] = useState(false);
+  const [bookmarks, setBookmarks] = useState([]);
+  const [downloads, setDownloads] = useState({});
+  const [downloadError, setDownloadError] = useState('');
 
   useEffect(() => {
     setLoading(true);
@@ -27,13 +37,21 @@ export default function MangaPage({ source, mangaId, navigate }) {
       getChapterList(source, mangaId, 1),
       getProgress(source, mangaId),
       db.library.get(mangaId),
-    ]).then(([m, ch, prog, lib]) => {
+      getMangaBookmarks(source, mangaId),
+      getDownloadedChapters(source),
+    ]).then(([m, ch, prog, lib, savedBookmarks, savedDownloads]) => {
       setManga(m);
       setChapters(ch.chapters);
       setExternalCount(ch.externalCount || 0);
       setHasMore(ch.hasMore);
       setProgress(prog);
       setInLibrary(!!lib);
+      setBookmarks(savedBookmarks);
+      setDownloads(Object.fromEntries(
+        savedDownloads
+          .filter(download => download.mangaId === mangaId)
+          .map(download => [download.chapterId, { status: 'downloaded' }]),
+      ));
       setLoading(false);
       setChaptersLoading(false);
       addToHistory(source, mangaId, m.title, m.cover);
@@ -63,6 +81,59 @@ export default function MangaPage({ source, mangaId, navigate }) {
     navigate(`#/read/${source}/${encodeURIComponent(mangaId)}/${encodeURIComponent(ch.id)}`);
   }
 
+  async function handleToggleBookmark(chapter) {
+    try {
+      const isBookmarked = await toggleChapterBookmark({
+        source,
+        mangaId,
+        chapterId: chapter.id,
+        chapterNum: chapter.chapter || '?',
+        chapterTitle: chapter.title || '',
+        mangaTitle: manga.title,
+      });
+      setBookmarks(previous => isBookmarked
+        ? [...previous, { chapterId: chapter.id }]
+        : previous.filter(bookmark => bookmark.chapterId !== chapter.id));
+    } catch (err) {
+      console.error(err);
+      setDownloadError(`Could not update bookmark: ${err.message}`);
+    }
+  }
+
+  async function handleDownload(chapter) {
+    setDownloadError('');
+    setDownloads(previous => ({
+      ...previous,
+      [chapter.id]: { status: 'downloading', done: 0, total: 0 },
+    }));
+    try {
+      await saveChapterOffline({
+        source,
+        mangaId,
+        chapter,
+        mangaTitle: manga.title,
+        onProgress: (done, total) => {
+          setDownloads(previous => ({
+            ...previous,
+            [chapter.id]: { status: 'downloading', done, total },
+          }));
+        },
+      });
+      setDownloads(previous => ({
+        ...previous,
+        [chapter.id]: { status: 'downloaded' },
+      }));
+    } catch (err) {
+      console.error(err);
+      setDownloads(previous => {
+        const next = { ...previous };
+        delete next[chapter.id];
+        return next;
+      });
+      setDownloadError(`Could not download chapter ${chapter.chapter || '?'}: ${err.message}`);
+    }
+  }
+
   async function toggleLibrary() {
     if (inLibrary) {
       await db.library.delete(mangaId);
@@ -79,6 +150,14 @@ export default function MangaPage({ source, mangaId, navigate }) {
       setInLibrary(true);
     }
   }
+
+  const firstChapter = chapters.length > 0
+    ? chapters.reduce((min, ch) => (parseFloat(ch.chapter) || Infinity) < (parseFloat(min.chapter) || Infinity) ? ch : min)
+    : null;
+
+  const sortedChapters = sortNewestFirst
+    ? [...chapters].sort((a, b) => (parseFloat(b.chapter) || 0) - (parseFloat(a.chapter) || 0))
+    : [...chapters].sort((a, b) => (parseFloat(a.chapter) || 0) - (parseFloat(b.chapter) || 0));
 
   if (loading) {
     return (
@@ -134,32 +213,64 @@ export default function MangaPage({ source, mangaId, navigate }) {
               {manga.description}
             </p>
           )}
-          <div className="flex gap-3 mt-2">
+          <div className="flex gap-3 mt-2 flex-wrap">
+            {firstChapter && (
+              <button
+                onClick={() => openChapter(firstChapter)}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                Read Ch. {firstChapter.chapter || '1'}
+              </button>
+            )}
+            {progress && (
+              <button
+                onClick={() => navigate(`#/read/${source}/${encodeURIComponent(mangaId)}/${encodeURIComponent(progress.chapterId)}`)}
+                className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                Continue Ch. {progress.chapterNum}
+              </button>
+            )}
             <button
               onClick={toggleLibrary}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 inLibrary
                   ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30'
-                  : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
               }`}
             >
               {inLibrary ? 'In Library' : 'Add to Library'}
             </button>
-            {progress && (
-              <button
-                onClick={() => navigate(`#/read/${source}/${encodeURIComponent(mangaId)}/${encodeURIComponent(progress.chapterId)}`)}
-                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-medium transition-colors"
-              >
-                Continue Ch. {progress.chapterNum}
-              </button>
-            )}
           </div>
         </div>
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold mb-3">{chapters.length} Chapters</h2>
-        <ChapterList chapters={chapters} externalCount={externalCount} onSelect={openChapter} currentChapterId={progress?.chapterId} />
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">{chapters.length} Chapters</h2>
+          {chapters.length > 1 && (
+            <button
+              onClick={() => setSortNewestFirst(prev => !prev)}
+              className="text-xs text-zinc-400 hover:text-zinc-200 bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              {sortNewestFirst ? 'Newest first' : 'Oldest first'}
+            </button>
+          )}
+        </div>
+        {downloadError && (
+          <p role="alert" className="mb-3 rounded-lg bg-red-950/60 px-4 py-3 text-sm text-red-300">
+            {downloadError}
+          </p>
+        )}
+        <ChapterList
+          chapters={sortedChapters}
+          externalCount={externalCount}
+          onSelect={openChapter}
+          currentChapterId={progress?.chapterId}
+          bookmarks={bookmarks}
+          downloads={downloads}
+          onToggleBookmark={handleToggleBookmark}
+          onDownload={handleDownload}
+        />
         {hasMore && (
           <button
             onClick={loadMoreChapters}

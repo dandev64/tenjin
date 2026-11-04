@@ -1,4 +1,4 @@
-const DEFAULT_SOURCE = 'mangadex';
+const DEFAULT_SOURCE = 'mangapill';
 
 export function getActiveSource() {
   try {

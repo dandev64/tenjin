@@ -26,15 +26,15 @@ export function searchManga(source, query, page = 1) {
 }
 
 export function getMangaDetails(source, id) {
-  return request(`/api/${source}/manga/${encodeURIComponent(id)}`);
+  return request(`/api/${source}/manga?id=${encodeURIComponent(id)}`);
 }
 
 export function getChapterList(source, mangaId, page = 1) {
-  return request(`/api/${source}/manga/${encodeURIComponent(mangaId)}/chapters?page=${page}`);
+  return request(`/api/${source}/manga/chapters?id=${encodeURIComponent(mangaId)}&page=${page}`);
 }
 
 export function getPageUrls(source, chapterId) {
-  return request(`/api/${source}/chapter/${encodeURIComponent(chapterId)}/pages`);
+  return request(`/api/${source}/chapter/pages?id=${encodeURIComponent(chapterId)}`);
 }
 
 export function proxyImageUrl(url, source) {

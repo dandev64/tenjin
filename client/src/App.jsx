@@ -43,6 +43,7 @@ export default function App() {
       case 'read':
         return (
           <ReaderPage
+            key={`${segments[1] || source}:${decodeURIComponent(segments[2] || '')}`}
             source={segments[1] || source}
             mangaId={decodeURIComponent(segments[2] || '')}
             chapterId={decodeURIComponent(segments[3] || '')}
@@ -67,6 +68,12 @@ export default function App() {
               Tenjin
             </button>
             <nav className="flex items-center gap-3">
+              <a
+                href="https://open-animation-hls.vercel.app/#"
+                className="text-sm font-medium text-zinc-400 hover:text-zinc-200 transition-colors"
+              >
+                Anime
+              </a>
               <button
                 onClick={() => navigate('#/library')}
                 className={`text-sm font-medium transition-colors ${
