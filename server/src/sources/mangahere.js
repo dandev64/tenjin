@@ -179,9 +179,15 @@ export class MangaHereSource {
     const seen = new Set();
     $('a[href*="/1.html"]').each((_, el) => {
       const href = $(el).attr('href') || '';
-      const chMatch = href.match(/\/manga\/[^/]+\/c(\d+(?:\.\d+)?)\//);
-      if (!chMatch) return;
-      const chNum = chMatch[1];
+      let pathname;
+      try {
+        pathname = new URL(href, BASE).pathname;
+      } catch {
+        return;
+      }
+      const chMatch = pathname.match(/^\/manga\/([^/]+)\/c(\d+(?:\.\d+)?)\/1\.html$/);
+      if (!chMatch || chMatch[1] !== mangaId) return;
+      const chNum = chMatch[2];
       if (seen.has(chNum)) return;
       seen.add(chNum);
 
