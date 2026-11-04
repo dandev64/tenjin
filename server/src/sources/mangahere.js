@@ -31,6 +31,20 @@ function unpackJS(packed) {
   return p.replace(/\b\w+\b/g, tok => dict[tok] !== undefined ? dict[tok] : tok);
 }
 
+function getImageUrl(decoded) {
+  const pixMatch = decoded.match(/\bpix="([^"]+)"/);
+  const pathsMatch = decoded.match(/\bpvalue\s*=\s*(\[[^\]]*\])/);
+  if (!pixMatch || !pathsMatch) return null;
+
+  const [imagePath] = JSON.parse(pathsMatch[1]);
+  if (typeof imagePath !== 'string') return null;
+
+  if (imagePath.startsWith('//')) return `https:${imagePath}`;
+
+  const base = new URL(`https:${pixMatch[1].replace(/\/+$/, '')}/`);
+  return new URL(imagePath.replace(/^\/+/, ''), base).href;
+}
+
 export class MangaHereSource {
   id = 'mangahere';
   name = 'MangaHere';
@@ -182,26 +196,31 @@ export class MangaHereSource {
     const cid = cidMatch[1];
     const pageCount = parseInt(countMatch[1]);
 
-    const ashxRes = await fetch(
-      `${BASE}/manga/${slug}/chapterfun.ashx?cid=${cid}&page=1&key=`,
-      { headers: { 'User-Agent': UA, Referer: chapterUrl } },
-    );
-    if (!ashxRes.ok) return [];
-    const packed = await ashxRes.text();
-    const decoded = unpackJS(packed);
-
-    const pixMatch = decoded.match(/pix="([^"]+)"/);
-    if (!pixMatch) return [];
-    const base = 'https:' + pixMatch[1];
-
     const pages = [];
-    for (let i = 0; i < pageCount; i++) {
-      const num = String(i).padStart(3, '0');
-      pages.push({
-        index: i,
-        url: `${base}/e${num}.jpg`,
-        headers: { Referer: `${BASE}/` },
-      });
+    for (let firstPage = 1; firstPage <= pageCount; firstPage += 8) {
+      const batchSize = Math.min(8, pageCount - firstPage + 1);
+      const batch = await Promise.all(Array.from({ length: batchSize }, async (_, offset) => {
+        const pageNumber = firstPage + offset;
+        const ashxRes = await fetch(
+          `${BASE}/manga/${slug}/chapterfun.ashx?cid=${cid}&page=${pageNumber}&key=`,
+          { headers: { 'User-Agent': UA, Referer: chapterUrl } },
+        );
+        if (!ashxRes.ok) {
+          throw new Error(`HTTP ${ashxRes.status} fetching MangaHere page ${pageNumber}`);
+        }
+
+        const imageUrl = getImageUrl(unpackJS(await ashxRes.text()));
+        if (!imageUrl) {
+          throw new Error(`Could not resolve MangaHere image URL for page ${pageNumber}`);
+        }
+
+        return {
+          index: pageNumber - 1,
+          url: imageUrl,
+          headers: { Referer: `${BASE}/` },
+        };
+      }));
+      pages.push(...batch);
     }
 
     cache.set(cacheKey, pages);
