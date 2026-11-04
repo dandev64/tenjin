@@ -28,7 +28,7 @@ export function createApp() {
 
   app.use('/api', apiRouter);
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
     const clientDist = path.join(__dirname, '../../client/dist');
     app.use(express.static(clientDist));
     app.get('/{*path}', (req, res) => {
