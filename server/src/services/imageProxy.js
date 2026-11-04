@@ -5,6 +5,7 @@ const SOURCE_HEADERS = {
   mangadex: { Referer: 'https://mangadex.org/' },
   mangapill: { Referer: 'https://mangapill.com/' },
   asurascans: { Referer: 'https://asurascans.com/' },
+  toonily: { Referer: 'https://toonily.com/' },
 };
 
 export async function proxyImage(req, res) {

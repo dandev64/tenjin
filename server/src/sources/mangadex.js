@@ -42,7 +42,7 @@ export class MangaDexSource {
     const limit = 20;
     const offset = (page - 1) * limit;
     const data = await fetchJSON(
-      `${API}/manga?title=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}&includes[]=cover_art&includes[]=author&contentRating[]=safe&contentRating[]=suggestive&order[relevance]=desc`
+      `${API}/manga?title=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}&includes[]=cover_art&includes[]=author&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&order[relevance]=desc`
     );
     return {
       manga: data.data.map(mapManga),
@@ -59,7 +59,7 @@ export class MangaDexSource {
     if (cached) return cached;
 
     const data = await fetchJSON(
-      `${API}/manga?limit=${limit}&offset=${offset}&includes[]=cover_art&includes[]=author&contentRating[]=safe&contentRating[]=suggestive&order[followedCount]=desc`
+      `${API}/manga?limit=${limit}&offset=${offset}&includes[]=cover_art&includes[]=author&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&order[followedCount]=desc`
     );
     const result = {
       manga: data.data.map(mapManga),
@@ -78,7 +78,7 @@ export class MangaDexSource {
     if (cached) return cached;
 
     const data = await fetchJSON(
-      `${API}/manga?limit=${limit}&offset=${offset}&includes[]=cover_art&includes[]=author&contentRating[]=safe&contentRating[]=suggestive&order[latestUploadedChapter]=desc`
+      `${API}/manga?limit=${limit}&offset=${offset}&includes[]=cover_art&includes[]=author&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&order[latestUploadedChapter]=desc`
     );
     const result = {
       manga: data.data.map(mapManga),
