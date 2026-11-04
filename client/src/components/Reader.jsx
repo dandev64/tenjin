@@ -77,6 +77,11 @@ export default function Reader({
   }
 
   function handleTap(e) {
+    if (isWebtoon) {
+      toggleControls();
+      return;
+    }
+
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const third = rect.width / 3;
@@ -121,13 +126,13 @@ export default function Reader({
     <div
       ref={containerRef}
       className={`fixed inset-0 bg-black flex flex-col z-50 ${isWebtoon ? '' : 'select-none'}`}
-      onClick={isWebtoon ? undefined : handleTap}
+      onClick={handleTap}
       onTouchStart={isWebtoon ? undefined : handleTouchStart}
       onTouchEnd={isWebtoon ? undefined : handleTouchEnd}
     >
       <div
         className={`absolute top-0 left-0 right-0 z-10 bg-black/85 px-4 py-3 transition-opacity duration-200 ${
-          isWebtoon || showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
         <div className="flex items-center justify-between gap-3 max-w-4xl mx-auto">
@@ -184,7 +189,7 @@ export default function Reader({
         <div
           ref={scrollContainerRef}
           onScroll={handleVerticalScroll}
-          className="flex-1 overflow-y-auto overscroll-contain pt-14 pb-28"
+          className={`flex-1 overflow-y-auto overscroll-contain ${showControls ? 'pt-14 pb-28' : ''}`}
         >
           <div className="mx-auto max-w-[900px]">
             {pages.map((page, index) => (
@@ -230,7 +235,7 @@ export default function Reader({
 
       <div
         className={`absolute bottom-0 left-0 right-0 z-10 bg-black/85 px-4 py-3 transition-opacity duration-200 ${
-          isWebtoon || showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       >
         <div className="max-w-4xl mx-auto flex items-center gap-3">
