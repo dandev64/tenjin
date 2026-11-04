@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getSources } from '../api.js';
 import { getActiveSource, setActiveSource } from '../lib/sources.js';
+import { SourceIcon, ChevronDownIcon } from './Icons.jsx';
 
 export default function SourceSelector({ onSourceChange }) {
   const [sources, setSources] = useState([]);
@@ -33,13 +34,11 @@ export default function SourceSelector({ onSourceChange }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-sm font-medium transition-colors"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-sm font-medium transition-colors"
       >
-        <span>{current?.icon || '📚'}</span>
+        <SourceIcon sourceId={current?.id} className="w-4 h-4 text-zinc-300" />
         <span className="hidden sm:inline">{current?.name || 'Source'}</span>
-        <svg className={`w-3.5 h-3.5 text-zinc-500 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-        </svg>
+        <ChevronDownIcon className={`w-3.5 h-3.5 text-zinc-500 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
@@ -57,7 +56,7 @@ export default function SourceSelector({ onSourceChange }) {
                   : 'text-zinc-300 hover:bg-zinc-800'
               }`}
             >
-              <span className="text-lg leading-none">{s.icon}</span>
+              <SourceIcon sourceId={s.id} className="w-4.5 h-4.5 shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-medium truncate">{s.name}</span>

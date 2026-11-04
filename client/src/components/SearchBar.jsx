@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SearchIcon } from './Icons.jsx';
 
 export default function SearchBar({ onSearch, initialQuery = '' }) {
   const [query, setQuery] = useState(initialQuery);
@@ -10,20 +11,15 @@ export default function SearchBar({ onSearch, initialQuery = '' }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <form onSubmit={handleSubmit} className="relative">
+      <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-500 pointer-events-none" />
       <input
         type="text"
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Search manga..."
-        className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2.5 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition-colors"
+        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20 transition-all"
       />
-      <button
-        type="submit"
-        className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
-      >
-        Search
-      </button>
     </form>
   );
 }

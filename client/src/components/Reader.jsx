@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { proxyImageUrl } from '../api.js';
+import { ArrowLeftIcon, BookmarkIcon, DownloadIcon, CheckCircleIcon, LoaderIcon, LayersIcon, ScrollIcon } from './Icons.jsx';
 
 export default function Reader({
   pages,
@@ -131,49 +132,54 @@ export default function Reader({
       onTouchEnd={isWebtoon ? undefined : handleTouchEnd}
     >
       <div
-        className={`absolute top-0 left-0 right-0 z-10 bg-black/85 px-4 py-3 transition-opacity duration-200 ${
+        className={`absolute top-0 left-0 right-0 z-10 bg-black/90 backdrop-blur-sm px-4 py-3 transition-opacity duration-200 ${
           showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
         <div className="flex items-center justify-between gap-3 max-w-4xl mx-auto">
           <button
             onClick={e => { e.stopPropagation(); onClose(); }}
-            className="text-white/80 hover:text-white text-sm"
+            className="text-white/80 hover:text-white p-1"
           >
-            ← Back
+            <ArrowLeftIcon className="w-5 h-5" />
           </button>
           <span className="text-white/60 text-sm truncate mx-4">
             {mangaTitle} — Ch. {chapterNum}
           </span>
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="text-white/60 text-sm">
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-white/50 text-xs tabular-nums mr-1">
               {currentPage + 1}/{totalPages}
             </span>
             <button
               onClick={e => { e.stopPropagation(); onToggleBookmark(); }}
-              className={`text-sm ${isBookmarked ? 'text-amber-400' : 'text-white/70 hover:text-amber-300'}`}
+              className={`p-2 rounded-lg transition-colors ${isBookmarked ? 'text-amber-400' : 'text-white/60 hover:text-amber-300'}`}
               aria-label={isBookmarked ? 'Remove chapter bookmark' : 'Bookmark chapter'}
               title={isBookmarked ? 'Remove chapter bookmark' : 'Bookmark chapter'}
             >
-              {isBookmarked ? '★' : '☆'}
+              <BookmarkIcon className="w-4.5 h-4.5" filled={isBookmarked} />
             </button>
             <button
               onClick={e => { e.stopPropagation(); onDownloadChapter(); }}
               disabled={downloadStatus === 'downloading' || downloadStatus === 'downloaded'}
-              className="text-xs text-white/70 hover:text-white disabled:opacity-60"
+              className="p-2 rounded-lg text-white/60 hover:text-white disabled:opacity-50 transition-colors"
               aria-label={downloadStatus === 'downloaded' ? 'Chapter saved offline' : 'Download chapter for offline reading'}
             >
-              {downloadStatus === 'downloaded' ? 'Saved' : downloadStatus === 'downloading' ? 'Saving…' : '↓'}
+              {downloadStatus === 'downloaded'
+                ? <CheckCircleIcon className="w-4.5 h-4.5 text-green-400" />
+                : downloadStatus === 'downloading'
+                  ? <LoaderIcon className="w-4.5 h-4.5" />
+                  : <DownloadIcon className="w-4.5 h-4.5" />}
             </button>
             <button
               onClick={e => {
                 e.stopPropagation();
                 onReaderModeChange(isWebtoon ? 'page' : 'webtoon');
               }}
-              className="text-xs px-2.5 py-1.5 rounded-md bg-white/10 hover:bg-white/20 text-white"
+              className="p-2 rounded-lg text-white/60 hover:text-white transition-colors"
               aria-label={`Switch to ${isWebtoon ? 'page-by-page' : 'Webtoon scroll'} reader`}
+              title={isWebtoon ? 'Page mode' : 'Scroll mode'}
             >
-              {isWebtoon ? 'Page' : 'Webtoon'}
+              {isWebtoon ? <LayersIcon className="w-4.5 h-4.5" /> : <ScrollIcon className="w-4.5 h-4.5" />}
             </button>
           </div>
         </div>
@@ -211,7 +217,7 @@ export default function Reader({
                 <p className="text-sm text-white/50">End of chapter</p>
                 <button
                   onClick={e => { e.stopPropagation(); goNext(); }}
-                  className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-500"
+                  className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-500"
                 >
                   Next chapter
                 </button>
@@ -234,12 +240,12 @@ export default function Reader({
       )}
 
       <div
-        className={`absolute bottom-0 left-0 right-0 z-10 bg-black/85 px-4 py-3 transition-opacity duration-200 ${
+        className={`absolute bottom-0 left-0 right-0 z-10 bg-black/90 backdrop-blur-sm px-4 py-3 transition-opacity duration-200 ${
           showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       >
         <div className="max-w-4xl mx-auto flex items-center gap-3">
-          <span className="text-white/60 text-xs w-8 text-right">{currentPage + 1}</span>
+          <span className="text-white/50 text-xs w-8 text-right tabular-nums">{currentPage + 1}</span>
           <input
             type="range"
             min={0}
@@ -253,7 +259,7 @@ export default function Reader({
             onClick={e => e.stopPropagation()}
             className="flex-1 accent-indigo-500 h-1"
           />
-          <span className="text-white/60 text-xs w-8">{totalPages}</span>
+          <span className="text-white/50 text-xs w-8 tabular-nums">{totalPages}</span>
         </div>
       </div>
     </div>

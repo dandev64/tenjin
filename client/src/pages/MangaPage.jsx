@@ -11,6 +11,7 @@ import {
 } from '../lib/chapterLibrary.js';
 import db from '../db.js';
 import { markAsSeen } from '../lib/libraryUpdates.js';
+import { ArrowLeftIcon, PlayIcon, HeartIcon, SortIcon } from '../components/Icons.jsx';
 
 export default function MangaPage({ source, mangaId, navigate }) {
   const [manga, setManga] = useState(null);
@@ -26,6 +27,7 @@ export default function MangaPage({ source, mangaId, navigate }) {
   const [bookmarks, setBookmarks] = useState([]);
   const [downloads, setDownloads] = useState({});
   const [downloadError, setDownloadError] = useState('');
+  const [descExpanded, setDescExpanded] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -183,8 +185,9 @@ export default function MangaPage({ source, mangaId, navigate }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <button onClick={() => navigate('#/')} className="text-zinc-500 hover:text-zinc-300 text-sm self-start transition-colors">
-        ← Back
+      <button onClick={() => navigate('#/')} className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 text-sm self-start transition-colors">
+        <ArrowLeftIcon className="w-4 h-4" />
+        Back
       </button>
 
       <div className="flex flex-col md:flex-row gap-6">
@@ -193,61 +196,73 @@ export default function MangaPage({ source, mangaId, navigate }) {
             <img
               src={proxyImageUrl(manga.coverFull || manga.cover, source)}
               alt={manga.title}
-              className="w-full rounded-lg"
+              className="w-full rounded-xl shadow-lg shadow-black/30"
             />
           )}
         </div>
 
         <div className="flex-1 flex flex-col gap-3">
-          <h1 className="text-2xl font-bold">{manga.title}</h1>
-          {manga.author && <p className="text-zinc-400">{manga.author}</p>}
+          <h1 className="text-2xl font-bold leading-tight">{manga.title}</h1>
+          {manga.author && <p className="text-zinc-400 text-sm">{manga.author}</p>}
           <div className="flex gap-2 flex-wrap">
             {manga.status && (
-              <span className="px-2 py-0.5 bg-zinc-800 rounded text-xs text-zinc-400 capitalize">
+              <span className="px-2.5 py-1 bg-zinc-800/80 rounded-lg text-xs text-zinc-400 capitalize">
                 {manga.status}
               </span>
             )}
             {manga.year && (
-              <span className="px-2 py-0.5 bg-zinc-800 rounded text-xs text-zinc-400">
+              <span className="px-2.5 py-1 bg-zinc-800/80 rounded-lg text-xs text-zinc-400">
                 {manga.year}
               </span>
             )}
             {(manga.tags || []).slice(0, 6).map(tag => (
-              <span key={tag} className="px-2 py-0.5 bg-zinc-800 rounded text-xs text-zinc-400">
+              <span key={tag} className="px-2.5 py-1 bg-zinc-800/80 rounded-lg text-xs text-zinc-400">
                 {tag}
               </span>
             ))}
           </div>
           {manga.description && (
-            <p className="text-sm text-zinc-400 leading-relaxed line-clamp-4">
-              {manga.description}
-            </p>
+            <div>
+              <p className={`text-sm text-zinc-400 leading-relaxed ${descExpanded ? '' : 'line-clamp-3'}`}>
+                {manga.description}
+              </p>
+              {manga.description.length > 200 && (
+                <button
+                  onClick={() => setDescExpanded(prev => !prev)}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 mt-1 transition-colors"
+                >
+                  {descExpanded ? 'Show less' : 'Show more'}
+                </button>
+              )}
+            </div>
           )}
           <div className="flex gap-3 mt-2 flex-wrap">
             {firstChapter && (
               <button
                 onClick={() => openChapter(firstChapter)}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-medium transition-colors"
               >
+                <PlayIcon className="w-3.5 h-3.5" />
                 Read Ch. {firstChapter.chapter || '1'}
               </button>
             )}
             {progress && (
               <button
                 onClick={() => navigate(`#/read/${source}/${encodeURIComponent(mangaId)}/${encodeURIComponent(progress.chapterId)}`)}
-                className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded-lg text-sm font-medium transition-colors"
+                className="px-4 py-2.5 bg-zinc-700 hover:bg-zinc-600 text-white rounded-xl text-sm font-medium transition-colors"
               >
                 Continue Ch. {progress.chapterNum}
               </button>
             )}
             <button
               onClick={toggleLibrary}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 inLibrary
                   ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30'
                   : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
               }`}
             >
+              <HeartIcon className="w-4 h-4" filled={inLibrary} />
               {inLibrary ? 'In Library' : 'Add to Library'}
             </button>
           </div>
@@ -260,8 +275,9 @@ export default function MangaPage({ source, mangaId, navigate }) {
           {chapters.length > 1 && (
             <button
               onClick={() => setSortNewestFirst(prev => !prev)}
-              className="text-xs text-zinc-400 hover:text-zinc-200 bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg transition-colors"
             >
+              <SortIcon className="w-3.5 h-3.5" />
               {sortNewestFirst ? 'Newest first' : 'Oldest first'}
             </button>
           )}

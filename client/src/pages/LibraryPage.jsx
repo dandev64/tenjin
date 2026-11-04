@@ -3,6 +3,7 @@ import db from '../db.js';
 import LibraryGrid from '../components/LibraryGrid.jsx';
 import { getBookmarks, getDownloadedChapters, removeDownloadedChapter } from '../lib/chapterLibrary.js';
 import { checkLibraryUpdates } from '../lib/libraryUpdates.js';
+import { ChevronRightIcon, XIcon, BookmarkIcon, DownloadIcon, LoaderIcon } from '../components/Icons.jsx';
 
 function groupByManga(chapters) {
   const map = new Map();
@@ -21,7 +22,7 @@ function groupByManga(chapters) {
 
 function MangaGroup({ group, open, onToggle, onChapterClick, renderActions }) {
   return (
-    <div className="rounded-lg bg-zinc-900 overflow-hidden">
+    <div className="rounded-xl bg-zinc-900/80 overflow-hidden">
       <button
         onClick={onToggle}
         className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-zinc-800/60 transition-colors"
@@ -32,9 +33,7 @@ function MangaGroup({ group, open, onToggle, onChapterClick, renderActions }) {
             {group.chapters.length} chapter{group.chapters.length !== 1 ? 's' : ''}
           </span>
         </div>
-        <span className={`text-zinc-500 text-sm ml-3 transition-transform ${open ? 'rotate-90' : ''}`}>
-          ▸
-        </span>
+        <ChevronRightIcon className={`w-4 h-4 text-zinc-500 ml-3 transition-transform ${open ? 'rotate-90' : ''}`} />
       </button>
       {open && (
         <div className="border-t border-zinc-800 flex flex-col">
@@ -126,15 +125,18 @@ export default function LibraryPage({ source, navigate }) {
   }
 
   if (loading) {
-    return <div className="animate-pulse h-40 bg-zinc-900 rounded-lg" />;
+    return <div className="animate-pulse h-40 bg-zinc-900 rounded-xl" />;
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Library</h2>
         {checking && (
-          <span className="text-xs text-zinc-500 animate-pulse">Checking for updates...</span>
+          <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+            <LoaderIcon className="w-3 h-3" />
+            Checking for updates
+          </span>
         )}
         {!checking && Object.keys(updates).length > 0 && (
           <span className="text-xs text-indigo-400">
@@ -146,7 +148,10 @@ export default function LibraryPage({ source, navigate }) {
       {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
 
       <section>
-        <h3 className="mb-3 text-lg font-semibold">Bookmarked</h3>
+        <div className="flex items-center gap-2 mb-3">
+          <BookmarkIcon className="w-4.5 h-4.5 text-zinc-400" />
+          <h3 className="text-lg font-semibold">Bookmarked</h3>
+        </div>
         {bookmarkGroups.length ? (
           <div className="flex flex-col gap-2">
             {bookmarkGroups.map(group => (
@@ -165,7 +170,10 @@ export default function LibraryPage({ source, navigate }) {
       </section>
 
       <section>
-        <h3 className="mb-3 text-lg font-semibold">Downloaded</h3>
+        <div className="flex items-center gap-2 mb-3">
+          <DownloadIcon className="w-4.5 h-4.5 text-zinc-400" />
+          <h3 className="text-lg font-semibold">Downloaded</h3>
+        </div>
         {downloadGroups.length ? (
           <div className="flex flex-col gap-2">
             {downloadGroups.map(group => (
@@ -180,10 +188,10 @@ export default function LibraryPage({ source, navigate }) {
                     <span className="text-xs text-zinc-600">{ch.pageCount}p</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleRemoveDownload(ch); }}
-                      className="shrink-0 rounded px-2 py-1 text-xs text-zinc-500 hover:text-red-300 transition-colors"
+                      className="shrink-0 p-1 rounded-md text-zinc-500 hover:text-red-400 transition-colors"
                       aria-label={`Remove chapter ${ch.chapterNum} download`}
                     >
-                      ✕
+                      <XIcon className="w-3.5 h-3.5" />
                     </button>
                   </>
                 )}
