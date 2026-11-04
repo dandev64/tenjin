@@ -42,7 +42,9 @@ function getImageUrl(decoded) {
   if (imagePath.startsWith('//')) return `https:${imagePath}`;
 
   const base = new URL(`https:${pixMatch[1].replace(/\/+$/, '')}/`);
-  return new URL(imagePath.replace(/^\/+/, ''), base).href;
+  const imageUrl = new URL(imagePath.replace(/^\/+/, ''), base);
+  if (/\/images\/war\.jpg$/i.test(imageUrl.pathname)) return null;
+  return imageUrl.href;
 }
 
 function parseCatalog(html) {
@@ -214,7 +216,7 @@ export class MangaHereSource {
   }
 
   async getPageUrls(chapterId) {
-    const cacheKey = `mh:pages:${chapterId}`;
+    const cacheKey = `mh:pages:v2:${chapterId}`;
     const cached = cache.get(cacheKey);
     if (cached) return cached;
 
@@ -235,8 +237,8 @@ export class MangaHereSource {
     }
 
     const pages = [];
-    for (let firstPage = 1; firstPage <= pageCount; firstPage += 8) {
-      const batchSize = Math.min(8, pageCount - firstPage + 1);
+    for (let firstPage = 1; firstPage <= pageCount; firstPage += 2) {
+      const batchSize = Math.min(2, pageCount - firstPage + 1);
       const batch = await Promise.all(Array.from({ length: batchSize }, async (_, offset) => {
         const pageNumber = firstPage + offset;
         const ashxRes = await fetch(
