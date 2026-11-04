@@ -45,6 +45,36 @@ function getImageUrl(decoded) {
   return new URL(imagePath.replace(/^\/+/, ''), base).href;
 }
 
+function parseCatalog(html) {
+  const $ = cheerio.load(html);
+  const manga = [];
+  const seen = new Set();
+
+  $('.manga-list-1-list > li, .manga-list-4-list > li').each((_, el) => {
+    const item = $(el);
+    const anchor = item.find('a[href^="/manga/"]').filter((__, link) => {
+      return /^\/manga\/[^/]+\/?$/.test($(link).attr('href') || '');
+    }).first();
+    const href = anchor.attr('href') || '';
+    const slug = href.match(/^\/manga\/([^/]+)/)?.[1];
+    if (!slug || seen.has(slug)) return;
+
+    const title = anchor.attr('title') || anchor.text().trim();
+    if (!title || title === 'Ongoing' || title === 'Completed') return;
+
+    seen.add(slug);
+    manga.push({
+      id: slug,
+      title,
+      cover: item.find('img').first().attr('src')
+        || item.find('img').first().attr('data-src')
+        || null,
+    });
+  });
+
+  return manga;
+}
+
 export class MangaHereSource {
   id = 'mangahere';
   name = 'MangaHere';
@@ -77,21 +107,9 @@ export class MangaHereSource {
     const cached = cache.get(cacheKey);
     if (cached) return cached;
 
-    const html = await fetchHTML(`${BASE}/ranking/rating_${page > 1 ? page + '.htm' : ''}`);
-    const $ = cheerio.load(html);
-    const manga = [];
-
-    $('a[href^="/manga/"]').each((_, el) => {
-      const href = $(el).attr('href') || '';
-      const slug = href.match(/^\/manga\/([^/]+)/)?.[1];
-      if (!slug || manga.some(m => m.id === slug) || href.includes('/c')) return;
-
-      const title = $(el).attr('title') || $(el).text().trim();
-      if (!title || title === 'Ongoing' || title === 'Completed') return;
-
-      const cover = $(el).closest('.manga-list-4-list, li').find('img').first().attr('src') || null;
-      manga.push({ id: slug, title, cover });
-    });
+    const path = page > 1 ? `/ranking/${page}.htm` : '/ranking/';
+    const html = await fetchHTML(`${BASE}${path}`);
+    const manga = parseCatalog(html);
 
     const result = { manga, hasMore: manga.length >= 20, total: null };
     cache.set(cacheKey, result);
@@ -99,7 +117,16 @@ export class MangaHereSource {
   }
 
   async getLatest(page = 1) {
-    return this.getPopular(page);
+    const cacheKey = `mh:latest:${page}`;
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
+    const path = page > 1 ? `/latest/${page}.htm` : '/latest/';
+    const html = await fetchHTML(`${BASE}${path}`);
+    const manga = parseCatalog(html);
+    const result = { manga, hasMore: manga.length >= 20, total: null };
+    cache.set(cacheKey, result);
+    return result;
   }
 
   async getMangaDetails(mangaId) {
