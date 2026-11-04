@@ -210,78 +210,76 @@ export default function LibraryPage({ navigate }) {
         <SourceFilter sources={availableSources} active={sourceFilter} onChange={setSourceFilter} />
       )}
 
-      {manga.length > 0 ? (
-        <LibraryGrid manga={manga} onMangaClick={handleMangaClick} updates={updates} showSource={showSource} />
-      ) : (
+      {manga.length === 0 && bookmarkGroups.length === 0 && downloadGroups.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
           <p className="text-lg">Nothing here yet</p>
           <p className="text-sm mt-1">Search for manga to get started</p>
         </div>
-      )}
-
-      {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
-
-      <section>
-        <div className="flex items-center gap-2 mb-3">
-          <BookmarkIcon className="w-4.5 h-4.5 text-zinc-400" />
-          <h3 className="text-lg font-semibold">Bookmarked</h3>
-        </div>
-        {bookmarkGroups.length ? (
-          <div className="flex flex-col gap-2">
-            {bookmarkGroups.map(group => {
-              const key = `${group.source}:${group.mangaId}`;
-              return (
-                <MangaGroup
-                  key={key}
-                  group={group}
-                  open={expandedBookmarks.has(key)}
-                  onToggle={() => toggleExpanded(expandedBookmarks, setExpandedBookmarks, key)}
-                  onChapterClick={openChapter}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-zinc-500">Bookmarked chapters will appear here.</p>
+      ) : (<>
+        {manga.length > 0 && (
+          <LibraryGrid manga={manga} onMangaClick={handleMangaClick} updates={updates} showSource={showSource} />
         )}
-      </section>
 
-      <section>
-        <div className="flex items-center gap-2 mb-3">
-          <DownloadIcon className="w-4.5 h-4.5 text-zinc-400" />
-          <h3 className="text-lg font-semibold">Downloaded</h3>
-        </div>
-        {downloadGroups.length ? (
-          <div className="flex flex-col gap-2">
-            {downloadGroups.map(group => {
-              const key = `${group.source}:${group.mangaId}`;
-              return (
-                <MangaGroup
-                  key={key}
-                  group={group}
-                  open={expandedDownloads.has(key)}
-                  onToggle={() => toggleExpanded(expandedDownloads, setExpandedDownloads, key)}
-                  onChapterClick={openChapter}
-                  renderActions={(ch) => (
-                    <>
-                      <span className="text-xs text-zinc-600">{ch.pageCount}p</span>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleRemoveDownload(ch); }}
-                        className="shrink-0 p-1 rounded-md text-zinc-500 hover:text-red-400 transition-colors"
-                        aria-label={`Remove chapter ${ch.chapterNum} download`}
-                      >
-                        <XIcon className="w-3.5 h-3.5" />
-                      </button>
-                    </>
-                  )}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-zinc-500">Downloaded chapters will appear here for offline reading.</p>
+        {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
+
+        {bookmarkGroups.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <BookmarkIcon className="w-4.5 h-4.5 text-zinc-400" />
+              <h3 className="text-lg font-semibold">Bookmarked</h3>
+            </div>
+            <div className="flex flex-col gap-2">
+              {bookmarkGroups.map(group => {
+                const key = `${group.source}:${group.mangaId}`;
+                return (
+                  <MangaGroup
+                    key={key}
+                    group={group}
+                    open={expandedBookmarks.has(key)}
+                    onToggle={() => toggleExpanded(expandedBookmarks, setExpandedBookmarks, key)}
+                    onChapterClick={openChapter}
+                  />
+                );
+              })}
+            </div>
+          </section>
         )}
-      </section>
+
+        {downloadGroups.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <DownloadIcon className="w-4.5 h-4.5 text-zinc-400" />
+              <h3 className="text-lg font-semibold">Downloaded</h3>
+            </div>
+            <div className="flex flex-col gap-2">
+              {downloadGroups.map(group => {
+                const key = `${group.source}:${group.mangaId}`;
+                return (
+                  <MangaGroup
+                    key={key}
+                    group={group}
+                    open={expandedDownloads.has(key)}
+                    onToggle={() => toggleExpanded(expandedDownloads, setExpandedDownloads, key)}
+                    onChapterClick={openChapter}
+                    renderActions={(ch) => (
+                      <>
+                        <span className="text-xs text-zinc-600">{ch.pageCount}p</span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleRemoveDownload(ch); }}
+                          className="shrink-0 p-1 rounded-md text-zinc-500 hover:text-red-400 transition-colors"
+                          aria-label={`Remove chapter ${ch.chapterNum} download`}
+                        >
+                          <XIcon className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        )}
+      </>)}
     </div>
   );
 }
