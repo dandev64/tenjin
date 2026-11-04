@@ -1,6 +1,6 @@
 import { proxyImageUrl } from '../api.js';
 
-export default function MangaCard({ manga, source, onClick }) {
+export default function MangaCard({ manga, source, onClick, updateInfo }) {
   const coverSrc = manga.cover
     ? proxyImageUrl(manga.cover, source)
     : null;
@@ -22,6 +22,11 @@ export default function MangaCard({ manga, source, onClick }) {
           <div className="w-full h-full flex items-center justify-center text-zinc-600 text-sm">
             No Cover
           </div>
+        )}
+        {updateInfo && (
+          <span className="absolute top-2 right-2 bg-indigo-600 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full leading-none shadow">
+            {updateInfo.newChapters > 99 ? '99+' : updateInfo.newChapters}
+          </span>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>

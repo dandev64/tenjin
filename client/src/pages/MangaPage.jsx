@@ -10,6 +10,7 @@ import {
   toggleChapterBookmark,
 } from '../lib/chapterLibrary.js';
 import db from '../db.js';
+import { markAsSeen } from '../lib/libraryUpdates.js';
 
 export default function MangaPage({ source, mangaId, navigate }) {
   const [manga, setManga] = useState(null);
@@ -55,6 +56,7 @@ export default function MangaPage({ source, mangaId, navigate }) {
       setLoading(false);
       setChaptersLoading(false);
       addToHistory(source, mangaId, m.title, m.cover);
+      if (lib) markAsSeen(mangaId);
     }).catch(err => {
       console.error(err);
       setLoading(false);
@@ -139,6 +141,11 @@ export default function MangaPage({ source, mangaId, navigate }) {
       await db.library.delete(mangaId);
       setInLibrary(false);
     } else {
+      let highest = 0;
+      for (const ch of chapters) {
+        const num = parseFloat(ch.chapter);
+        if (num > highest) highest = num;
+      }
       await db.library.put({
         id: mangaId,
         source,
@@ -146,6 +153,9 @@ export default function MangaPage({ source, mangaId, navigate }) {
         cover: manga.cover,
         author: manga.author,
         updatedAt: Date.now(),
+        lastKnownChapter: highest || null,
+        latestChapter: highest || null,
+        lastCheckedAt: Date.now(),
       });
       setInLibrary(true);
     }

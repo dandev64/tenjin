@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import db from '../db.js';
 import LibraryGrid from '../components/LibraryGrid.jsx';
 import { getBookmarks, getDownloadedChapters, removeDownloadedChapter } from '../lib/chapterLibrary.js';
+import { checkLibraryUpdates } from '../lib/libraryUpdates.js';
 
 function groupByManga(chapters) {
   const map = new Map();
@@ -68,6 +69,8 @@ export default function LibraryPage({ source, navigate }) {
   const [loading, setLoading] = useState(true);
   const [expandedBookmarks, setExpandedBookmarks] = useState(new Set());
   const [expandedDownloads, setExpandedDownloads] = useState(new Set());
+  const [updates, setUpdates] = useState({});
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -83,6 +86,14 @@ export default function LibraryPage({ source, navigate }) {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [source]);
+
+  useEffect(() => {
+    if (loading || !manga.length) return;
+    setChecking(true);
+    checkLibraryUpdates(source)
+      .then(setUpdates)
+      .finally(() => setChecking(false));
+  }, [source, loading, manga.length]);
 
   const bookmarkGroups = useMemo(() => groupByManga(bookmarks), [bookmarks]);
   const downloadGroups = useMemo(() => groupByManga(downloads), [downloads]);
@@ -120,8 +131,18 @@ export default function LibraryPage({ source, navigate }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-xl font-bold">Library</h2>
-      {manga.length > 0 && <LibraryGrid manga={manga} source={source} onMangaClick={handleMangaClick} />}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold">Library</h2>
+        {checking && (
+          <span className="text-xs text-zinc-500 animate-pulse">Checking for updates...</span>
+        )}
+        {!checking && Object.keys(updates).length > 0 && (
+          <span className="text-xs text-indigo-400">
+            {Object.keys(updates).length} series with new chapters
+          </span>
+        )}
+      </div>
+      {manga.length > 0 && <LibraryGrid manga={manga} source={source} onMangaClick={handleMangaClick} updates={updates} />}
       {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
 
       <section>
