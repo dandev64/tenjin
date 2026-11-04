@@ -223,31 +223,29 @@ export class MangaHereSource {
     const cid = cidMatch[1];
     const pageCount = parseInt(countMatch[1]);
 
+    const ashxRes = await fetch(
+      `${BASE}/manga/${slug}/chapterfun.ashx?cid=${cid}&page=1&key=`,
+      { headers: { 'User-Agent': UA, Referer: chapterUrl } },
+    );
+    if (!ashxRes.ok) return [];
+
+    const decoded = unpackJS(await ashxRes.text());
+    const pixMatch = decoded.match(/\bpix="([^"]+)"/);
+    const pathsMatch = decoded.match(/\bpvalue\s*=\s*\[([^\]]*)\]/);
+    if (!pixMatch || !pathsMatch) return [];
+
+    const base = 'https:' + pixMatch[1];
+    const firstPath = pathsMatch[1].match(/"([^"]+)"/)?.[1] || '';
+    const prefix = firstPath.match(/\/([a-z])\d{3}\./)?.[1] || 'e';
+
     const pages = [];
-    for (let firstPage = 1; firstPage <= pageCount; firstPage += 8) {
-      const batchSize = Math.min(8, pageCount - firstPage + 1);
-      const batch = await Promise.all(Array.from({ length: batchSize }, async (_, offset) => {
-        const pageNumber = firstPage + offset;
-        const ashxRes = await fetch(
-          `${BASE}/manga/${slug}/chapterfun.ashx?cid=${cid}&page=${pageNumber}&key=`,
-          { headers: { 'User-Agent': UA, Referer: chapterUrl } },
-        );
-        if (!ashxRes.ok) {
-          throw new Error(`HTTP ${ashxRes.status} fetching MangaHere page ${pageNumber}`);
-        }
-
-        const imageUrl = getImageUrl(unpackJS(await ashxRes.text()));
-        if (!imageUrl) {
-          throw new Error(`Could not resolve MangaHere image URL for page ${pageNumber}`);
-        }
-
-        return {
-          index: pageNumber - 1,
-          url: imageUrl,
-          headers: { Referer: `${BASE}/` },
-        };
-      }));
-      pages.push(...batch);
+    for (let i = 0; i < pageCount; i++) {
+      const num = String(i).padStart(3, '0');
+      pages.push({
+        index: i,
+        url: `${base}/${prefix}${num}.jpg`,
+        headers: { Referer: `${BASE}/` },
+      });
     }
 
     cache.set(cacheKey, pages);
