@@ -69,13 +69,16 @@ function AllResultsGrid({ groups, navigate }) {
 export default function SearchPage({ source, query, navigate }) {
   const [results, setResults] = useState([]);
   const [allResults, setAllResults] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!query);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [searchAll, setSearchAll] = useState(true);
 
   useEffect(() => {
-    if (!query) return;
+    if (!query) {
+      setLoading(false);
+      return;
+    }
     setResults([]);
     setAllResults([]);
     setPage(1);
@@ -115,8 +118,11 @@ export default function SearchPage({ source, query, navigate }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <SearchBar onSearch={handleSearch} initialQuery={query} />
+      <SearchBar onSearch={handleSearch} initialQuery={query} autoFocus={!query} />
 
+      {!query ? (
+        <p className="text-zinc-500 text-center py-10">Type a title to search across all sources</p>
+      ) : (<>
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-lg text-zinc-400 min-w-0 truncate">
           Results for "<span className="text-zinc-100">{query}</span>"
@@ -193,6 +199,7 @@ export default function SearchPage({ source, query, navigate }) {
           )}
         </>
       )}
+      </>)}
     </div>
   );
 }

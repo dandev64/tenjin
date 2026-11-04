@@ -13,7 +13,9 @@ function highestChapter(chapters) {
 }
 
 export async function checkLibraryUpdates(source) {
-  const entries = await db.library.where('source').equals(source).toArray();
+  const entries = source
+    ? await db.library.where('source').equals(source).toArray()
+    : await db.library.toArray();
   if (!entries.length) return {};
 
   const updates = {};
@@ -31,7 +33,7 @@ export async function checkLibraryUpdates(source) {
       }
 
       try {
-        const data = await getChapterList(source, entry.id, 1);
+        const data = await getChapterList(entry.source, entry.id, 1);
         const latest = highestChapter(data.chapters);
 
         await db.library.update(entry.id, {

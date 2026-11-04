@@ -1,8 +1,13 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { SearchIcon } from './Icons.jsx';
 
-export default function SearchBar({ onSearch, initialQuery = '' }) {
+export default function SearchBar({ onSearch, initialQuery = '', autoFocus = false }) {
   const [query, setQuery] = useState(initialQuery);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (autoFocus) inputRef.current?.focus();
+  }, [autoFocus]);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -14,6 +19,7 @@ export default function SearchBar({ onSearch, initialQuery = '' }) {
     <form onSubmit={handleSubmit} className="relative">
       <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-500 pointer-events-none" />
       <input
+        ref={inputRef}
         type="text"
         value={query}
         onChange={e => setQuery(e.target.value)}

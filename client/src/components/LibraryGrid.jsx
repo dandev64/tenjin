@@ -1,6 +1,6 @@
 import MangaCard from './MangaCard.jsx';
 
-export default function LibraryGrid({ manga, source, onMangaClick, updates = {} }) {
+export default function LibraryGrid({ manga, source, onMangaClick, updates = {}, showSource = false }) {
   if (!manga?.length) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
@@ -14,11 +14,12 @@ export default function LibraryGrid({ manga, source, onMangaClick, updates = {} 
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
       {manga.map(m => (
         <MangaCard
-          key={m.id}
+          key={`${m.source || source}:${m.id}`}
           manga={m}
-          source={source}
+          source={m.source || source}
           onClick={onMangaClick}
           updateInfo={updates[m.id]}
+          showSource={showSource}
         />
       ))}
     </div>

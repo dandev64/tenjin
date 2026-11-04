@@ -1,8 +1,10 @@
 import { proxyImageUrl } from '../api.js';
+import { SourceIcon } from './Icons.jsx';
 
-export default function MangaCard({ manga, source, onClick, updateInfo }) {
+export default function MangaCard({ manga, source, onClick, updateInfo, showSource }) {
+  const cardSource = manga.source || source;
   const coverSrc = manga.cover
-    ? proxyImageUrl(manga.cover, source)
+    ? proxyImageUrl(manga.cover, cardSource)
     : null;
 
   return (
@@ -27,6 +29,12 @@ export default function MangaCard({ manga, source, onClick, updateInfo }) {
           <span className="absolute top-2 right-2 bg-indigo-600 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full leading-none shadow">
             {updateInfo.newChapters > 99 ? '99+' : updateInfo.newChapters}
           </span>
+        )}
+        {showSource && cardSource && (
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 backdrop-blur-sm rounded-md px-1.5 py-0.5">
+            <SourceIcon sourceId={cardSource} className="w-3 h-3 text-zinc-300" />
+            <span className="text-[10px] font-medium text-zinc-300">{manga.sourceName || cardSource}</span>
+          </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>

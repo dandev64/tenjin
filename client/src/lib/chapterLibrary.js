@@ -15,6 +15,11 @@ export async function getBookmarks(source) {
   return bookmarks.sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
+export async function getAllBookmarks() {
+  const bookmarks = await db.bookmarks.toArray();
+  return bookmarks.sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
 export async function toggleChapterBookmark(bookmark) {
   const key = [bookmark.source, bookmark.mangaId, bookmark.chapterId];
   if (await db.bookmarks.get(key)) {
@@ -44,6 +49,11 @@ export function getOfflineChapterInfo(source, mangaId, chapterId) {
 
 export async function getDownloadedChapters(source) {
   const chapters = await db.offlineChapters.where('source').equals(source).toArray();
+  return chapters.sort((a, b) => b.downloadedAt - a.downloadedAt);
+}
+
+export async function getAllDownloadedChapters() {
+  const chapters = await db.offlineChapters.toArray();
   return chapters.sort((a, b) => b.downloadedAt - a.downloadedAt);
 }
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useHashRoute } from './hooks/useHashRoute.js';
 import { getActiveSource, setActiveSource } from './lib/sources.js';
 import SourceSelector from './components/SourceSelector.jsx';
-import { LibraryIcon, ExternalLinkIcon } from './components/Icons.jsx';
+import { LibraryIcon, ExternalLinkIcon, SearchIcon } from './components/Icons.jsx';
 import HomePage from './pages/HomePage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import MangaPage from './pages/MangaPage.jsx';
@@ -53,7 +53,7 @@ export default function App() {
         );
 
       case 'library':
-        return <LibraryPage source={source} navigate={navigate} />;
+        return <LibraryPage navigate={navigate} />;
 
       default:
         return <HomePage source={source} navigate={navigate} />;
@@ -69,13 +69,18 @@ export default function App() {
               Tenjin
             </button>
             <nav className="flex items-center gap-1">
-              <a
-                href="https://open-animation-hls.vercel.app/#"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors"
+              <button
+                onClick={() => navigate('#/search?q=')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  segments[0] === 'search'
+                    ? 'text-indigo-400 bg-indigo-500/10'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                }`}
+                aria-label="Search"
               >
-                <ExternalLinkIcon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Anime</span>
-              </a>
+                <SearchIcon className="w-4 h-4" />
+                <span className="hidden sm:inline">Search</span>
+              </button>
               <button
                 onClick={() => navigate('#/library')}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -83,10 +88,19 @@ export default function App() {
                     ? 'text-indigo-400 bg-indigo-500/10'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
                 }`}
+                aria-label="Library"
               >
                 <LibraryIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">Library</span>
               </button>
+              <a
+                href="https://open-animation-hls.vercel.app/#"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors"
+                aria-label="Anime"
+              >
+                <ExternalLinkIcon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Anime</span>
+              </a>
               <SourceSelector onSourceChange={handleSourceChange} />
             </nav>
           </div>
