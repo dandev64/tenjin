@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import config from './config.js';
 import apiRouter from './routes/api.js';
+import { trackRequest } from './lib/analytics.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -22,6 +23,13 @@ export function createApp() {
     if (apiPath) {
       url.searchParams.delete('__path');
       req.url = `/api${apiPath}${url.search}`;
+    }
+    next();
+  });
+
+  app.use('/api', (req, res, next) => {
+    if (!req.path.startsWith('/analytics') && req.path !== '/health') {
+      trackRequest(req);
     }
     next();
   });

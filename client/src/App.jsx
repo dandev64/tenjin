@@ -8,6 +8,7 @@ import SearchPage from './pages/SearchPage.jsx';
 import MangaPage from './pages/MangaPage.jsx';
 import ReaderPage from './pages/ReaderPage.jsx';
 import LibraryPage from './pages/LibraryPage.jsx';
+import MonitorPage from './pages/MonitorPage.jsx';
 
 export default function App() {
   const { path, params, segments, navigate } = useHashRoute();
@@ -54,6 +55,9 @@ export default function App() {
 
       case 'library':
         return <LibraryPage navigate={navigate} />;
+
+      case 'monitor':
+        return <MonitorPage />;
 
       default:
         return <HomePage source={source} navigate={navigate} />;

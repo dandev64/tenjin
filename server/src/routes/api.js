@@ -1,8 +1,31 @@
 import { Router } from 'express';
 import { getSource, getAllSources } from '../sources/index.js';
 import { proxyImage } from '../services/imageProxy.js';
+import { getEvents, getStats, getVisitors } from '../lib/analytics.js';
 
 const router = Router();
+
+function requireMonitorKey(req, res, next) {
+  const key = process.env.MONITOR_KEY;
+  if (!key) return res.status(503).json({ error: 'Monitoring not configured' });
+  const provided = req.query.key || req.headers['x-monitor-key'];
+  if (provided !== key) return res.status(401).json({ error: 'Invalid key' });
+  next();
+}
+
+router.get('/analytics/stats', requireMonitorKey, (req, res) => {
+  res.json(getStats());
+});
+
+router.get('/analytics/events', requireMonitorKey, (req, res) => {
+  const since = req.query.since ? parseInt(req.query.since) : undefined;
+  const limit = req.query.limit ? parseInt(req.query.limit) : 200;
+  res.json(getEvents({ since, limit }));
+});
+
+router.get('/analytics/visitors', requireMonitorKey, (req, res) => {
+  res.json(getVisitors());
+});
 
 router.get('/health', (req, res) => {
   res.json({

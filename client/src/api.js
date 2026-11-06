@@ -44,3 +44,15 @@ export function getPageUrls(source, chapterId) {
 export function proxyImageUrl(url, source) {
   return `/api/proxy/image?url=${encodeURIComponent(url)}&source=${source}`;
 }
+
+export function getAnalyticsStats(key) {
+  return request(`/api/analytics/stats?key=${encodeURIComponent(key)}`);
+}
+
+export function getAnalyticsEvents(key, limit = 100) {
+  return request(`/api/analytics/events?key=${encodeURIComponent(key)}&limit=${limit}`);
+}
+
+export function getAnalyticsVisitors(key) {
+  return request(`/api/analytics/visitors?key=${encodeURIComponent(key)}`);
+}
