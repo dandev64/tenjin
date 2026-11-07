@@ -133,6 +133,8 @@ export class MangaPillSource {
       });
     });
 
+    chapters.sort((a, b) => parseFloat(a.chapter) - parseFloat(b.chapter));
+
     const result = { chapters, externalCount: 0, hasMore: false, total: chapters.length };
     cache.set(cacheKey, result);
     return result;
